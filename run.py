@@ -41,6 +41,20 @@ class Sms(Resource):
             'Number': args.get("number"),
         }
         return machine.SendSMS(message), 200
+    
+ class Call(Resource):
+
+    def __init__(self, sm):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('number')
+        self.machine = sm
+
+    @auth.login_required
+    def post(self):
+        args = self.parser.parse_args()
+        if args['number'] is None:
+            abort(404, message="Parameters 'number' are required.")
+        return state_machine.DialVoice(args.get("number")), 200
 
 
 class Signal(Resource):
@@ -53,6 +67,7 @@ class Signal(Resource):
 
 api.add_resource(Sms, '/sms', resource_class_args=[machine])
 api.add_resource(Signal, '/signal', resource_class_args=[machine])
+api.add_resource(Signal, '/call', resource_class_args=[machine])
 
 if __name__ == '__main__':
     if ssl:
